@@ -8,19 +8,19 @@
   */
 
 
-#ifndef QUEUE_H_
-#define QUEUE_H_
+#ifndef ESPQ_H_
+#define ESPQ_H_
 
 /* Includes ------------------------------------------------------------------*/
 #include "stdint.h"
 
 /* Exported defines ----------------------------------------------------------*/
-#define QUEUE_COUNT(Q)					(((Q)->in - (Q)->out) & ((Q)->size  - 1))
-#define QUEUE_SPACE(Q)					((Q)->size - 1 - QUEUE_COUNT(Q))
-#define QUEUE_PTRLOOP(Q, PTR)			((PTR) & (Q->size - 1))
-#define QUEUE_TOU32(Q, OFFSET)			((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET)] + ((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET + 1)] << 8) + ((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET + 2)] << 16)  + ((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET + 3)] << 24) )
-#define QUEUE_TOU24(Q, OFFSET)			((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET)] + ((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET + 1)] << 8) + ((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET + 2)] << 16))
-#define QUEUE_TOU16(Q, OFFSET)			((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET)] + ((Q)->pBuff[QUEUE_PTRLOOP((Q), OFFSET + 1)] << 8))
+#define ESPQ_COUNT(Q)					(((Q)->in - (Q)->out) & ((Q)->size  - 1))
+#define ESPQ_SPACE(Q)					((Q)->size - 1 - ESPQ_COUNT(Q))
+#define ESPQ_PTRLOOP(Q, PTR)			((PTR) & (Q->size - 1))
+#define ESPQ_TOU32(Q, OFFSET)			((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET)] + ((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET + 1)] << 8) + ((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET + 2)] << 16)  + ((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET + 3)] << 24) )
+#define ESPQ_TOU24(Q, OFFSET)			((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET)] + ((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET + 1)] << 8) + ((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET + 2)] << 16))
+#define ESPQ_TOU16(Q, OFFSET)			((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET)] + ((Q)->pBuff[ESPQ_PTRLOOP((Q), OFFSET + 1)] << 8))
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct
@@ -29,27 +29,27 @@ typedef struct
 	uint32_t size;		//Must be a power of 2
 	uint32_t in;
 	uint32_t out;
-}QUEUE_Typedef;
+}ESPQ_Typedef;
 
 typedef enum
 {
-	QUEUE_OK = 0,
-	QUEUE_NOSPACE = -1,
-	QUEUE_PARAM = -2,
-	QUEUE_NOTENOUGHDATA = -3
-}QUEUE_STATUS;
+	ESPQ_OK = 0,
+	ESPQ_NOSPACE = -1,
+	ESPQ_PARAM = -2,
+	ESPQ_NOTENOUGHDATA = -3
+}ESPQ_STATUS;
 
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void QUEUE_Initialize(QUEUE_Typedef *queue, uint8_t *pBuff, uint32_t size);
-QUEUE_STATUS QUEUE_Add(QUEUE_Typedef *queue, uint8_t data);
-QUEUE_STATUS QUEUE_AddArray(QUEUE_Typedef *queue, uint8_t *data, uint32_t length);
-QUEUE_STATUS QUEUE_AddQueue(QUEUE_Typedef *queue, QUEUE_Typedef *data, uint32_t length);
-uint8_t QUEUE_ElementAt(QUEUE_Typedef *queue, uint32_t index);
-uint8_t QUEUE_ReadOutByte(QUEUE_Typedef *queue);
-QUEUE_STATUS QUEUE_ReadOutArray(QUEUE_Typedef *queue, uint8_t *data, uint32_t length);
-QUEUE_STATUS QUEUE_ReadOutQueue(QUEUE_Typedef *queue, QUEUE_Typedef *data, uint32_t length);
-QUEUE_STATUS QUEUE_ReadToArray(QUEUE_Typedef *queue, uint32_t offset, uint8_t *data, uint32_t length);
-QUEUE_STATUS QUEUE_Remove(QUEUE_Typedef *queue, uint32_t count);
+void ESPQ_Initialize(ESPQ_Typedef *queue, uint8_t *pBuff, uint32_t size);
+ESPQ_STATUS ESPQ_Add(ESPQ_Typedef *queue, uint8_t data);
+ESPQ_STATUS ESPQ_AddArray(ESPQ_Typedef *queue, uint8_t *data, uint32_t length);
+ESPQ_STATUS ESPQ_AddQueue(ESPQ_Typedef *queue, ESPQ_Typedef *data, uint32_t length);
+uint8_t ESPQ_ElementAt(ESPQ_Typedef *queue, uint32_t index);
+uint8_t ESPQ_ReadOutByte(ESPQ_Typedef *queue);
+ESPQ_STATUS ESPQ_ReadOutArray(ESPQ_Typedef *queue, uint8_t *data, uint32_t length);
+ESPQ_STATUS ESPQ_ReadOutQueue(ESPQ_Typedef *queue, ESPQ_Typedef *data, uint32_t length);
+ESPQ_STATUS ESPQ_ReadToArray(ESPQ_Typedef *queue, uint32_t offset, uint8_t *data, uint32_t length);
+ESPQ_STATUS ESPQ_Remove(ESPQ_Typedef *queue, uint32_t count);
 
 #endif /* BUFFER_H_ */

@@ -42,3 +42,15 @@ void USART_ReceiveHandler(uint8_t *data, uint32_t size)
 {
 	ESP_PacketDataReceive(&esp, data, size);
 }
+
+/* ---------------------------------------------------------------------------*/
+/**
+  * @brief	Packet received callback handler
+  * @param	esp: pointer to the esp system
+  * @param	packet: pointer to the received packet
+  * @retval	None
+  */
+void ESP_PacketReceivedHandler(ESP_td *esp, ESPPKT_RxPacket_TD *packet)
+{
+	//TODO: Handle packet received
+}

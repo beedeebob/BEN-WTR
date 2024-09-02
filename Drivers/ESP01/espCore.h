@@ -18,6 +18,9 @@ typedef enum
 {
 	ESP_OK = 0,
 	ESP_BUSY = 1,
+	ESP_ALREADYEXISTS = 2,
+	ESP_NOSPACE = 3,
+	ESP_LIMITSEXCEEDED = 3
 }ESP_Result;
 
 /* Exported variables --------------------------------------------------------*/

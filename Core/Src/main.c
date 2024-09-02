@@ -28,6 +28,7 @@
 #include "usbHandler.h"
 #include "usbStreamReader.h"
 #include "fileStreamWriter.h"
+#include "esp.h"
 
 /* USER CODE END Includes */
 
@@ -49,6 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+extern ESP_td esp;
 
 /* USER CODE END PV */
 
@@ -107,6 +109,9 @@ int main(void)
   MX_TIM1_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+  ESP_Initialize(&esp);
+  ESP_Start(&esp);
+
 
   /* USER CODE END 2 */
 
@@ -579,6 +584,7 @@ void MAIN_milli(void)
 	USBHND_milli();
 	USR_millisecondTick();
 	FSW_tick();
+	ESP_tick();
 }
 
 /* USER CODE END 4 */

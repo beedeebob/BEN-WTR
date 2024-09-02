@@ -5,28 +5,29 @@
  *      Author: ben
  */
 
-#ifndef COMMS_H_
-#define COMMS_H_
+#ifndef ESPCOMMS_H_
+#define ESPCOMMS_H_
 
 /* Includes ------------------------------------------------------------------*/
 #include "espCore.h"
+#include "espDefs.h"
 
 /* Exported defines ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 typedef struct
 {
-	static uint8_t toUsart1Buffer[COMMS_BUFFERSIZE];
-	static QUEUE_Typedef toUSARTESP = {toUsart1Buffer, COMMS_BUFFERSIZE, 0, 0};
-	static uint8_t toUSBBuffer[COMMS_BUFFERSIZE];
-	static QUEUE_Typedef toUSARTPC = {toUSBBuffer, COMMS_BUFFERSIZE, 0, 0};
-	static uint8_t bpktBuffer[COMMS_BUFFERSIZE];
-	static QUEUE_Typedef bpktQueue = {bpktBuffer, COMMS_BUFFERSIZE, 0, 0};
-};
+	uint8_t toEspBuffer[ESPCOMMS_BUFFERSIZE];
+	ESPQ_Typedef toEspQ;
+	uint8_t fromEspBuffer[ESPCOMMS_BUFFERSIZE];
+	ESPQ_Typedef fromExpQ;
+}ESP_Communications_td;
 
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void COMMS_milli(void);
-ESP_Result ESP_SendPacket(uint8_t *data, uint32_t length);
-void ESP_PacketDataReceive(ESP_td *esp, uint8_t *pData, uint32_t length);
+void ESPCOMMS_structInit(ESP_Communications_td *commsStruct);
+void ESPCOMMS_tick(ESP_td *esp);
+uint32_t ESPCOMMS_GetTransmitSpace(ESP_td *esp);
+ESP_Result ESPCOMMS_Command(ESP_td *esp, uint16_t command, uint8_t *parameters, uint16_t parameterSize);
+void ESPCOMMS_PacketDataReceive(ESP_td *esp, uint8_t *pData, uint32_t length);
 
-#endif /* COMMS_H_ */
+#endif /* ESPCOMMS_H_ */

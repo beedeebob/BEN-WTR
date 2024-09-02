@@ -24,7 +24,7 @@
   * @param	size: size of the buffer. Must be a power of 2
   * @retval	None
   */
-void QUEUE_Initialize(QUEUE_Typedef *queue, uint8_t *pBuff, uint32_t size)
+void ESPQ_Initialize(ESPQ_Typedef *queue, uint8_t *pBuff, uint32_t size)
 {
 	queue->pBuff = pBuff;
 	queue->size = size;
@@ -37,17 +37,17 @@ void QUEUE_Initialize(QUEUE_Typedef *queue, uint8_t *pBuff, uint32_t size)
   * @brief	Add a byte to the queue
   * @param	queue: pointer to the queue struct
   * @param	data: byte to add
-  * @retval QUEUE_STATUS
+  * @retval ESPQ_STATUS
   */
-QUEUE_STATUS QUEUE_Add(QUEUE_Typedef *queue, uint8_t data)
+ESPQ_STATUS ESPQ_Add(ESPQ_Typedef *queue, uint8_t data)
 {
-	if(QUEUE_SPACE(queue) == 0)
-		return QUEUE_NOSPACE;
+	if(ESPQ_SPACE(queue) == 0)
+		return ESPQ_NOSPACE;
 
 	queue->pBuff[queue->in] = data;
-	queue->in = QUEUE_PTRLOOP(queue, queue->in + 1);
+	queue->in = ESPQ_PTRLOOP(queue, queue->in + 1);
 
-	return QUEUE_OK;
+	return ESPQ_OK;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -56,18 +56,18 @@ QUEUE_STATUS QUEUE_Add(QUEUE_Typedef *queue, uint8_t data)
   * @param	queue: pointer to the queue struct
   * @param	data: pointer to data array to add
   * @param	length: amount of data to add
-  * @retval QUEUE_STATUS
+  * @retval ESPQ_STATUS
   */
-QUEUE_STATUS QUEUE_AddArray(QUEUE_Typedef *queue, uint8_t *data, uint32_t length)
+ESPQ_STATUS ESPQ_AddArray(ESPQ_Typedef *queue, uint8_t *data, uint32_t length)
 {
-	if(QUEUE_SPACE(queue) < length)
-		return QUEUE_NOSPACE;
+	if(ESPQ_SPACE(queue) < length)
+		return ESPQ_NOSPACE;
 
 	for(uint32_t i = 0; i < length; i++)
-		queue->pBuff[QUEUE_PTRLOOP(queue, queue->in + i)] = data[i];
-	queue->in = QUEUE_PTRLOOP(queue, queue->in + length);
+		queue->pBuff[ESPQ_PTRLOOP(queue, queue->in + i)] = data[i];
+	queue->in = ESPQ_PTRLOOP(queue, queue->in + length);
 
-	return QUEUE_OK;
+	return ESPQ_OK;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -76,22 +76,22 @@ QUEUE_STATUS QUEUE_AddArray(QUEUE_Typedef *queue, uint8_t *data, uint32_t length
   * @param	queue: pointer to the queue struct
   * @param	data: pointer to data array to add
   * @param	length: amount of data to add
-  * @retval QUEUE_STATUS
+  * @retval ESPQ_STATUS
   */
-QUEUE_STATUS QUEUE_AddQueue(QUEUE_Typedef *queue, QUEUE_Typedef *data, uint32_t length)
+ESPQ_STATUS ESPQ_AddQueue(ESPQ_Typedef *queue, ESPQ_Typedef *data, uint32_t length)
 {
-	if(QUEUE_SPACE(queue) < length)
-		return QUEUE_NOSPACE;
-	if(QUEUE_COUNT(data) < length)
-		return QUEUE_NOTENOUGHDATA;
+	if(ESPQ_SPACE(queue) < length)
+		return ESPQ_NOSPACE;
+	if(ESPQ_COUNT(data) < length)
+		return ESPQ_NOTENOUGHDATA;
 
 	for(uint32_t i = 0; i < length; i++)
-		queue->pBuff[QUEUE_PTRLOOP(queue, queue->in + i)] = data->pBuff[QUEUE_PTRLOOP(data, data->out + i)];
+		queue->pBuff[ESPQ_PTRLOOP(queue, queue->in + i)] = data->pBuff[ESPQ_PTRLOOP(data, data->out + i)];
 
-	queue->in = QUEUE_PTRLOOP(queue, queue->in + length);
-	data->out = QUEUE_PTRLOOP(data, data->out + length);
+	queue->in = ESPQ_PTRLOOP(queue, queue->in + length);
+	data->out = ESPQ_PTRLOOP(data, data->out + length);
 
-	return QUEUE_OK;
+	return ESPQ_OK;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -101,12 +101,12 @@ QUEUE_STATUS QUEUE_AddQueue(QUEUE_Typedef *queue, QUEUE_Typedef *data, uint32_t 
   * @param	index: index to read with reference to the out pointer
   * @retval value or 0xff if the index exceeds the data
   */
-uint8_t QUEUE_ElementAt(QUEUE_Typedef *queue, uint32_t index)
+uint8_t ESPQ_ElementAt(ESPQ_Typedef *queue, uint32_t index)
 {
-	if(index >= QUEUE_COUNT(queue))
+	if(index >= ESPQ_COUNT(queue))
 		return 0xff;
 
-	return queue->pBuff[QUEUE_PTRLOOP(queue, (index + queue->out))];
+	return queue->pBuff[ESPQ_PTRLOOP(queue, (index + queue->out))];
 }
 
 /*----------------------------------------------------------------------------*/
@@ -115,13 +115,13 @@ uint8_t QUEUE_ElementAt(QUEUE_Typedef *queue, uint32_t index)
   * @param	queue: pointer to the queue struct
   * @retval value of 0xff if there is not data
   */
-uint8_t QUEUE_ReadOutByte(QUEUE_Typedef *queue)
+uint8_t ESPQ_ReadOutByte(ESPQ_Typedef *queue)
 {
-	if(QUEUE_COUNT(queue) == 0)
+	if(ESPQ_COUNT(queue) == 0)
 		return 0xff;
 
 	uint8_t byte = queue->pBuff[queue->out];
-	queue->out = QUEUE_PTRLOOP(queue, (queue->out + 1));
+	queue->out = ESPQ_PTRLOOP(queue, (queue->out + 1));
 	return byte;
 }
 
@@ -131,18 +131,18 @@ uint8_t QUEUE_ReadOutByte(QUEUE_Typedef *queue)
   * @param	queue: pointer to the queue from which to read
   * @param	data: pointer to the data into which to read
   * @param	length: amount of data to read out
-  * @retval QUEUE_STATUS
+  * @retval ESPQ_STATUS
   */
-QUEUE_STATUS QUEUE_ReadOutArray(QUEUE_Typedef *queue, uint8_t *data, uint32_t length)
+ESPQ_STATUS ESPQ_ReadOutArray(ESPQ_Typedef *queue, uint8_t *data, uint32_t length)
 {
-	if(QUEUE_COUNT(queue) < length)
-		return QUEUE_NOTENOUGHDATA;
+	if(ESPQ_COUNT(queue) < length)
+		return ESPQ_NOTENOUGHDATA;
 
 	for(uint32_t i = 0; i < length; i++)
-		data[i] = queue->pBuff[QUEUE_PTRLOOP(queue, (queue->out + i))];
-	queue->out = QUEUE_PTRLOOP(queue, (queue->out + length));
+		data[i] = queue->pBuff[ESPQ_PTRLOOP(queue, (queue->out + i))];
+	queue->out = ESPQ_PTRLOOP(queue, (queue->out + length));
 
-	return QUEUE_OK;
+	return ESPQ_OK;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -151,21 +151,21 @@ QUEUE_STATUS QUEUE_ReadOutArray(QUEUE_Typedef *queue, uint8_t *data, uint32_t le
   * @param	queue: pointer to the queue from which to read
   * @param	data: pointer to the queue into which to read
   * @param	length: amount of data to read out
-  * @retval QUEUE_STATUS
+  * @retval ESPQ_STATUS
   */
-QUEUE_STATUS QUEUE_ReadOutQueue(QUEUE_Typedef *queue, QUEUE_Typedef *data, uint32_t length)
+ESPQ_STATUS ESPQ_ReadOutQueue(ESPQ_Typedef *queue, ESPQ_Typedef *data, uint32_t length)
 {
-	if(QUEUE_COUNT(queue) < length)
-		return QUEUE_NOTENOUGHDATA;
-	if(QUEUE_SPACE(data) < length)
-		return QUEUE_NOSPACE;
+	if(ESPQ_COUNT(queue) < length)
+		return ESPQ_NOTENOUGHDATA;
+	if(ESPQ_SPACE(data) < length)
+		return ESPQ_NOSPACE;
 
 	for(uint32_t i = 0; i < length; i++)
-		data->pBuff[QUEUE_PTRLOOP(data, (data->in + i))] = queue->pBuff[QUEUE_PTRLOOP(queue, (queue->out + i))];
-	queue->out = QUEUE_PTRLOOP(queue, (queue->out + length));
-	data->in = QUEUE_PTRLOOP(data, (data->in + length));
+		data->pBuff[ESPQ_PTRLOOP(data, (data->in + i))] = queue->pBuff[ESPQ_PTRLOOP(queue, (queue->out + i))];
+	queue->out = ESPQ_PTRLOOP(queue, (queue->out + length));
+	data->in = ESPQ_PTRLOOP(data, (data->in + length));
 
-	return QUEUE_OK;
+	return ESPQ_OK;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -174,14 +174,14 @@ QUEUE_STATUS QUEUE_ReadOutQueue(QUEUE_Typedef *queue, QUEUE_Typedef *data, uint3
   * @param	queue: pointer to the queue from which to read
   * @param	data: pointer to the data into which to read
   * @param	length: amount of data to read out
-  * @retval QUEUE_STATUS
+  * @retval ESPQ_STATUS
   */
-QUEUE_STATUS QUEUE_ReadToArray(QUEUE_Typedef *queue, uint32_t offset, uint8_t *data, uint32_t length)
+ESPQ_STATUS ESPQ_ReadToArray(ESPQ_Typedef *queue, uint32_t offset, uint8_t *data, uint32_t length)
 {
 	for(uint32_t i = 0; i < length; i++)
-		data[i] = queue->pBuff[QUEUE_PTRLOOP(queue, (queue->out + offset + i))];
+		data[i] = queue->pBuff[ESPQ_PTRLOOP(queue, (queue->out + offset + i))];
 
-	return QUEUE_OK;
+	return ESPQ_OK;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -190,11 +190,11 @@ QUEUE_STATUS QUEUE_ReadToArray(QUEUE_Typedef *queue, uint32_t offset, uint8_t *d
   * @param	count: number of bytes to remove
   * @retval value
   */
-QUEUE_STATUS QUEUE_Remove(QUEUE_Typedef *queue, uint32_t count)
+ESPQ_STATUS ESPQ_Remove(ESPQ_Typedef *queue, uint32_t count)
 {
-	if(QUEUE_COUNT(queue) < count)
-		return QUEUE_PARAM;
+	if(ESPQ_COUNT(queue) < count)
+		return ESPQ_PARAM;
 
-	queue->out = QUEUE_PTRLOOP(queue, (queue->out + count));
-	return QUEUE_OK;
+	queue->out = ESPQ_PTRLOOP(queue, (queue->out + count));
+	return ESPQ_OK;
 }

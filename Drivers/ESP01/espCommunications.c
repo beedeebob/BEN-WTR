@@ -8,61 +8,68 @@
 
 
 /* Includes ------------------------------------------------------------------*/
-#include "comms.h"
-#include "benQueue.h"
-#include "usart.h"
-#include "benPacket.h"
-#include "led.h"
+#include "espCommunications.h"
+#include "espQueue.h"
+#include "espUsartEncoding.h"
 
 /* Private define ------------------------------------------------------------*/
-#define COMMS_BUFFERSIZE				128
-
-//Event FLAGS
-enum
-{
-	COMMS_FLAG_TASKRUN = 0x01,
-};
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-static void COMMS_ESPPacketReceived(BPKT_Packet_TD *packet);
+void ESP_PacketReceivedHandler(ESP_td *esp, ESPPKT_RxPacket_TD *packet);
 
 /* Private functions ---------------------------------------------------------*/
 
 /**
-  * @brief	Task milli routine
-  * @param	None
+  * @brief	Initialize structure
+  * @param	commsStruct: pointer to structure
   * @retval	None
   */
-void COMMS_milli(void)
+void ESPCOMMS_structInit(ESP_Communications_td *commsStruct)
 {
+	commsStruct->toEspBuffer;
+	commsStruct->toEspQ.pBuff = &commsStruct->toEspBuffer;
+	commsStruct->toEspQ.size =  ESPCOMMS_BUFFERSIZE;
+	commsStruct->toEspQ.in =  0;
+	commsStruct->toEspQ.out =  0;
+
+	commsStruct->fromEspBuffer;
+	commsStruct->fromExpQ.pBuff = &commsStruct->fromEspBuffer;
+	commsStruct->fromExpQ.size = ESPCOMMS_BUFFERSIZE;
+	commsStruct->fromExpQ.in = 0;
+	commsStruct->fromExpQ.out = 0;
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+  * @brief	Task tick routine
+  * @param	commsStruct: pointer to structure
+  * @retval	None
+  */
+void ESPCOMMS_tick(ESP_td *esp)
+{
+	ESP_Communications_td *commsStruct = &esp->comms;
+
 	//Parse received data for packets
-	BPKT_Packet_TD receivedPacket = {0};
-	while(QUEUE_COUNT(&bpktQueue) > 0)
+	ESPPKT_RxPacket_TD receivedPacket = {0};
+	while(ESPQ_COUNT(&commsStruct->fromEspBuffer) > 0)
 	{
-		BPKT_STATUS_ENUM result = PKT_Decode(&bpktQueue, &receivedPacket);
+		ESPPKT_DECODEEnum result = ESPPKT_Decode(&commsStruct->fromEspBuffer, &receivedPacket);
 		if(result == BPKT_OK)
 		{
-			COMMS_ESPPacketReceived(&receivedPacket);
-			QUEUE_Remove(&bpktQueue, BPKT_PACKETSIZE(receivedPacket.length));
+			ESP_PacketReceivedHandler(commsStruct, &receivedPacket);
+			ESPQ_Remove(&commsStruct->fromEspBuffer, ESPPKT_PACKETSIZE(receivedPacket.length));
 		}
 		else if(result == BPKT_NOTENOUGHDATA)
 			break;
 		else
-			QUEUE_Remove(&bpktQueue, 1);
+			ESPQ_Remove(&commsStruct->fromEspBuffer, 1);
 	}
 
 	//Transfer out to USART
-	if(QUEUE_COUNT(&toUSARTESP) > 0)
+	if(ESPQ_COUNT(&commsStruct->toEspBuffer) > 0)
 	{
-		USART_Transmit(&usartESP, &toUSARTESP);
-	}
-
-	//Transfer out to USB
-	if(QUEUE_COUNT(&toUSARTPC) > 0)
-	{
-		USART_Transmit(&usartPC, &toUSARTPC);
+		USART_Transmit(esp, &commsStruct->toEspBuffer);
 	}
 }
 
@@ -74,25 +81,43 @@ void COMMS_milli(void)
   * @param	length: amount of data to transmit
   * @retval	None
   */
-void ESP_PacketDataReceive(ESP_td *esp, uint8_t *pData, uint32_t length)
+void ESPCOMMS_PacketDataReceive(ESP_td *esp, uint8_t *pData, uint32_t length)
 {
-		QUEUE_AddArray(&toUSARTPC, pData, length);
-		if(QUEUE_AddArray(&bpktQueue, pData, length) != QUEUE_OK)
-			return HAL_ERROR;
+	ESPQ_AddArray(&esp->comms.fromEspBuffer, pData, length);
 }
 
 /* ---------------------------------------------------------------------------*/
 /**
-  * @brief	Transmit to ESP device
+  * @brief	Get space in the transmission system
   * @param	esp: pointer to the esp system
-  * @param	data: pointer to the data to transit
-  * @param	length: amount of data to transmit
-  * @retval	HAL_StatusTypeDef
+  * @retval	space
   */
-ESP_Result ESP_SendPacket(ESP_td *esp, uint8_t *data, uint32_t length)
+uint32_t ESPCOMMS_GetTransmitSpace(ESP_td *esp)
 {
-	if(PKT_Encode(data, length, &toUSARTESP) != BPKT_OK)
-		return HAL_ERROR;
+	return ESPQ_SPACE(&esp->comms.toEspBuffer);
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+  * @brief	Command
+  * @param	esp: pointer to the esp system
+  * @param	command: command ID from @ref espPkt_commands
+  * @param	parameters: pointer to the parameter list
+  * @param	parameterSize: number of bytes in the parameter list
+  * @retval	ESP_Result
+  */
+ESP_Result ESPCOMMS_Command(ESP_td *esp, uint16_t command, uint8_t *parameters, uint16_t parameterSize)
+{
+	uint8_t data[2];
+	data[0] = (uint8_t)command;
+	data[1] = (uint8_t)(command >> 8);
+	uint16_t crc = 0;
+	ESP_Result result = ESPPKT_EncodeStart(&esp->comms.toEspBuffer, 2 + parameterSize, data, 2, &crc);
+	if(result != ESP_OK)
+		return result;
+	result = ESPPKT_EncodeEnd(&esp->comms.toEspBuffer, parameters, parameterSize, &crc);
+	if(result != ESP_OK)
+		return result;
 	return ESP_OK;
 }
 
@@ -107,4 +132,16 @@ ESP_Result ESP_SendPacket(ESP_td *esp, uint8_t *data, uint32_t length)
 __attribute__((weak)) ESP_Result USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size)
 {
 	return ESP_OK;
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+  * @brief	Packet received callback handler
+  * @param	esp: pointer to the esp system
+  * @param	packet: pointer to the received packet
+  * @retval	None
+  */
+__attribute__((weak)) void ESP_PacketReceivedHandler(ESP_td *esp, ESPPKT_RxPacket_TD *packet)
+{
+	return;
 }

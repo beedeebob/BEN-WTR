@@ -11,36 +11,41 @@
 #define BEN_PACKET_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "benQueue.h"
+#include "espCore.h"
+#include "espQueue.h"
+#include "espDefs.h"
+
 
 /* Exported defines ----------------------------------------------------------*/
-#define BPKT_OVERHEAD           (1 /*STX*/ + 2/*Length*/ + 4/*HCRC*/ + 4/*DCRC*/ + 1/*ETX*/)
-#define BPKT_PACKETSIZE(N)      (BPKT_OVERHEAD + N)
-#define BPKT_MAXDATALENGTH      256
+#define ESPPKT_OVERHEAD           (1 /*STX*/ + 2/*Length*/ + 4/*HCRC*/ + 4/*DCRC*/ + 1/*ETX*/)
+#define ESPPKT_PACKETSIZE(N)      (ESPPKT_OVERHEAD + N)
 
 /* Exported types ------------------------------------------------------------*/
-typedef struct
-{
-    uint8_t data[BPKT_MAXDATALENGTH];
-    uint16_t length;
-}BPKT_Packet_TD;
-
 typedef enum
 {
-	BPKT_OK = 0,
-    BPKT_NOTENOUGHDATA = -1,
-    BPKT_STX = -2,
-    BPKT_LENGTH = -3,
-    BPKT_HCRC = -4,
-    BPKT_ETX = -5,
-    BPKT_DCRC = -6,
-    BPKT_NOTENOUGHSPACE = -7,
-    BPKT_EXCEEDSMAXSIZE = -8
-}BPKT_STATUS_ENUM;
+	ESPPKT_OK = 0,
+    ESPPKT_NOTENOUGHDATA = -1,
+    ESPPKT_STX = -2,
+    ESPPKT_LENGTH = -3,
+    ESPPKT_HCRC = -4,
+    ESPPKT_ETX = -5,
+    ESPPKT_DCRC = -6,
+    ESPPKT_NOTENOUGHSPACE = -7,
+    ESPPKT_EXCEEDSMAXSIZE = -8
+}ESPPKT_DECODEEnum;
+
+typedef struct
+{
+    uint8_t data[ESPPKT_MAXDATALENGTH];
+    uint16_t length;
+}ESPPKT_RxPacket_TD;
 
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-BPKT_STATUS_ENUM PKT_Decode(QUEUE_Typedef *queue, BPKT_Packet_TD *packet);
-BPKT_STATUS_ENUM PKT_Encode(uint8_t *data, uint16_t length, QUEUE_Typedef *queue);
+ESPPKT_DECODEEnum ESPPKT_Decode(ESPQ_Typedef *queue, ESPPKT_RxPacket_TD *packet);
+ESP_Result ESPPKT_Encode(uint8_t *data, uint16_t length, ESPQ_Typedef *queue);
+ESP_Result ESPPKT_EncodeStart(ESPQ_Typedef *queue, uint16_t totallength, uint8_t *partData, uint16_t partlength, uint32_t *crc);
+ESP_Result ESPPKT_EncodePart(ESPQ_Typedef *queue, uint8_t *partData, uint16_t partlength, uint16_t *crc);
+ESP_Result ESPPKT_EncodeEnd(ESPQ_Typedef *queue, uint8_t *data, uint16_t length, uint16_t *crc);
 
 #endif /* BEN_PACKET_H */

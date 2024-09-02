@@ -15,28 +15,24 @@
 #include "espCore.h"
 #include "stdint.h"
 #include "stdbool.h"
+#include "espCommunications.h"
 
 /* Exported defines ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 
-typedef struct
+typedef struct ESP_td
 {
-	uint8_t state;						//Control state
-	uint8_t tmr;						//Control timer
-
-	//Update setting
-	uint32_t pressure;
-	int32_t temperature;
-	uint32_t humidity;
-
-	//Flags
-	bool hasWeatherUpdate;				//Set when the pressure, temperature, and humidity need to be posted
+	struct ESP_td *next;				//Pointer for chaining
+	ESP_Communications_td comms;		//Communications control
 }ESP_td;
 
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void ESP_Init(void);
-void ESP_ESPCOMMSHandler(uint8_t *data, uint32_t length);
-void ESP_PostWeatherUpdate(ESP_td *esp, uint32_t pressure, int32_t temperature, uint32_t humidity);
+void ESP_Initialize(ESP_td *esp);
+ESP_Result ESP_Start(ESP_td *esp);
+ESP_Result ESP_Close(ESP_td *esp);
+void ESP_tick(void);
+
+ESP_Result ESP_Command(ESP_td *esp, uint16_t command, uint8_t *parameters, uint16_t parameterSize);
 
 #endif /* ESP_H_ */

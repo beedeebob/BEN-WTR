@@ -12,7 +12,9 @@
 /* Includes ------------------------------------------------------------------*/
 
 /* Exported defines ----------------------------------------------------------*/
-#define espPkt_SetWeather					1
+
+//espPkt_commands
+#define espPkt_SetWeather				0x0001
 /*
 Set the weather values
 BYTE    BIT       VALUE                     DESCRIPTION
@@ -22,7 +24,7 @@ BYTE    BIT       VALUE                     DESCRIPTION
 9-12                                        Humidity in % X 1024 (little endian)
 */
 
-#define espPkt_WifiConnect                  2
+#define espPkt_WifiConnect               0x0002
 /*
 Connect to a wifi
 BYTE    BIT       VALUE                     DESCRIPTION
@@ -31,7 +33,7 @@ BYTE    BIT       VALUE                     DESCRIPTION
 -                                           Password string null terminated
 */
 
-#define espPkt_SetMQTTBrokerHost            3
+#define espPkt_SetMQTTBrokerHost        0x0003
 /*
 Startup the MQTT
 BYTE    BIT       VALUE                     DESCRIPTION
@@ -39,7 +41,7 @@ BYTE    BIT       VALUE                     DESCRIPTION
 -                                           MQTT broker host null terminating string
 */
 
-#define espPkt_SetMQTTBrokerLogin           4
+#define espPkt_SetMQTTBrokerLogin       0x0004
 /*
 Startup the MQTT
 BYTE    BIT       VALUE                     DESCRIPTION
@@ -48,7 +50,7 @@ BYTE    BIT       VALUE                     DESCRIPTION
 -                                           MQTT broker password null terminating string
 */
 
-#define espPkt_SetMQTTTopic			        5
+#define espPkt_SetMQTTTopic			    0x0005
 /*
 Startup the MQTT
 BYTE    BIT       VALUE                     DESCRIPTION
@@ -56,14 +58,14 @@ BYTE    BIT       VALUE                     DESCRIPTION
 -                                           MQTT topic null terminating string
 */
 
-#define espPkt_StartMQTT				    6
+#define espPkt_StartMQTT				    0x0006
 /*
 Startup the MQTT
 BYTE    BIT       VALUE                     DESCRIPTION
 0       -         espPkt_SetMQTTTopic       Packet
 */
 
-#define espPkt_ACK				            7
+#define espPkt_ACK				        0x0007
 /*
 Startup the MQTT
 BYTE    BIT       VALUE                     DESCRIPTION
@@ -71,7 +73,7 @@ BYTE    BIT       VALUE                     DESCRIPTION
 1                                           Packet being acked
 */
 
-#define espPkt_NACK				            8
+#define espPkt_NACK				        0x0008
 /*
 Startup the MQTT
 BYTE    BIT       VALUE                     DESCRIPTION
@@ -79,14 +81,14 @@ BYTE    BIT       VALUE                     DESCRIPTION
 1                                           Packet being nacked
 */
 
-#define espPkt_StartWeb				        9
+#define espPkt_StartWeb				    0x0009
 /*
 Startup the Website
 BYTE    BIT       VALUE                     DESCRIPTION
 0       -         espPkt_StartWeb           Packet
 */
 
-#define espPkt_Status						10
+#define espPkt_Status						0x0010
 /*
 Startup the Website
 BYTE    BIT       VALUE                     DESCRIPTION

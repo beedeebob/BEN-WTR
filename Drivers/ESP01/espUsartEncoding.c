@@ -20,8 +20,7 @@ o ETX                           0x03
 */
 
 /* Includes ------------------------------------------------------------------*/
-#include "benPacket.h"
-#include "benQueue.h"
+#include "espUsartEncoding.h"
 #include "stdint.h"
 
 /* Private define ------------------------------------------------------------*/
@@ -40,7 +39,7 @@ o ETX                           0x03
   * @param	len: number of bytes to encode
   * @retval	None
   */
-uint32_t crc32_accumulate(uint32_t crc, QUEUE_Typedef *queue, uint32_t offset, uint32_t len)
+static uint32_t crc32_accumulate(uint32_t crc, QUEUE_Typedef *queue, uint32_t offset, uint32_t len)
 {
     int k;
 
@@ -58,43 +57,43 @@ uint32_t crc32_accumulate(uint32_t crc, QUEUE_Typedef *queue, uint32_t offset, u
   * @brief	Parse for packet
   * @param	queue: Queue from which to remove the packet
   * @param[out]	packet: pointer to the returned packet when valid
-  * @retval	BPKT_STATUS_ENUM
+  * @retval	ESPPKT_DECODEEnum
   */
-BPKT_STATUS_ENUM PKT_Decode(QUEUE_Typedef *queue, BPKT_Packet_TD *packet)
+ESPPKT_DECODEEnum ESPPKT_Decode(QUEUE_Typedef *queue, ESPPKT_RxPacket_TD *packet)
 {
-    if(QUEUE_COUNT(queue) < BPKT_OVERHEAD)
-        return BPKT_NOTENOUGHDATA;
+    if(QUEUE_COUNT(queue) < ESPPKT_OVERHEAD)
+        return ESPPKT_NOTENOUGHDATA;
 
     if(QUEUE_ElementAt(queue, 0) != 0x02)
-        return BPKT_STX;
+        return ESPPKT_STX;
 
     uint32_t calccrc = 0;
     calccrc = crc32_accumulate(calccrc, queue, queue->out, 3);
     uint32_t lclcrc = QUEUE_TOU32(queue, queue->out + 3);
     if(lclcrc != calccrc)
-        return BPKT_HCRC;
+        return ESPPKT_HCRC;
 
     uint16_t length = QUEUE_ElementAt(queue, 1);
     length += (QUEUE_ElementAt(queue, 2) << 8);
-    if((length > BPKT_MAXDATALENGTH) || (length == 0))
-        return BPKT_LENGTH;
+    if((length > ESPPKT_MAXDATALENGTH) || (length == 0))
+        return ESPPKT_LENGTH;
 
-    if(QUEUE_COUNT(queue) < BPKT_PACKETSIZE(length))
-        return BPKT_NOTENOUGHDATA;
+    if(QUEUE_COUNT(queue) < ESPPKT_PACKETSIZE(length))
+        return ESPPKT_NOTENOUGHDATA;
 
-    if(QUEUE_ElementAt(queue, BPKT_PACKETSIZE(length) - 1) !=  0x03)
-        return BPKT_ETX;
+    if(QUEUE_ElementAt(queue, ESPPKT_PACKETSIZE(length) - 1) !=  0x03)
+        return ESPPKT_ETX;
 
     calccrc = 0;
     calccrc = crc32_accumulate(calccrc, queue, queue->out + 7, length);
-    lclcrc = QUEUE_TOU32(queue, queue->out + BPKT_PACKETSIZE(length) - 5);
+    lclcrc = QUEUE_TOU32(queue, queue->out + ESPPKT_PACKETSIZE(length) - 5);
     if(lclcrc != calccrc)
-        return BPKT_DCRC;
+        return ESPPKT_DCRC;
 
     //All good now
     QUEUE_ReadToArray(queue, 7, packet->data, length);
     packet->length = length;
-    return BPKT_OK;
+    return ESPPKT_OK;
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -102,14 +101,14 @@ BPKT_STATUS_ENUM PKT_Decode(QUEUE_Typedef *queue, BPKT_Packet_TD *packet)
   * @brief	Parse for packet
   * @param	queue: Queue from which to remove the packet
   * @param[out]	packet: pointer to the returned packet when valid
-  * @retval	BPKT_STATUS_ENUM
+  * @retval	ESPESPPKT_STATUS_ENUM
   */
-BPKT_STATUS_ENUM PKT_Encode(uint8_t *data, uint16_t length, QUEUE_Typedef *queue)
+ESP_Result ESPPKT_Encode(uint8_t *data, uint16_t length, QUEUE_Typedef *queue)
 {
-    if(QUEUE_SPACE(queue) < BPKT_PACKETSIZE(length))
-        return BPKT_NOTENOUGHSPACE;
-    if(length > BPKT_MAXDATALENGTH)
-    	return BPKT_EXCEEDSMAXSIZE;
+    if(QUEUE_SPACE(queue) < ESPESPPKT_PACKETSIZE(length))
+        return ESP_NOSPACE;
+    if(length > ESPESPPKT_MAXDATALENGTH)
+    	return ESP_LIMITSEXCEEDED;
 
     uint32_t strt = queue->in;
     QUEUE_Add(queue, 0x02);
@@ -133,5 +132,83 @@ BPKT_STATUS_ENUM PKT_Encode(uint8_t *data, uint16_t length, QUEUE_Typedef *queue
     QUEUE_Add(queue, (uint8_t)(calccrc >> 24));
 
     QUEUE_Add(queue, 0x03);
-    return BPKT_OK;
+    return ESP_OK;
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+  * @brief	Begin encoding a packet
+  * @param	queue: Queue into which the data is written
+  * @param	totallength: total length of the packet
+  * @param	partData: pointer to the part of the data
+  * @param	partlength: length of the data part
+  * @param	[out]crc: pointer to the returned CRC value
+  * @retval	ESP_Result
+  */
+ESP_Result ESPPKT_EncodeStart(QUEUE_Typedef *queue, uint16_t totallength, uint8_t *partData, uint16_t partlength, uint32_t *crc)
+{
+    if(QUEUE_SPACE(queue) < ESPESPPKT_PACKETSIZE(totallength))
+        return ESP_NOSPACE;
+    if(length > ESPPKT_MAXDATALENGTH)
+    	return ESP_LIMITSEXCEEDED;
+
+    uint32_t strt = queue->in;
+    QUEUE_Add(queue, 0x02);
+
+    QUEUE_Add(queue, (uint8_t)totallength);
+    QUEUE_Add(queue, (uint8_t)(totallength >> 8));
+
+    uint32_t calccrc = crc32_accumulate(0, queue, strt, 3);
+    QUEUE_Add(queue, (uint8_t)calccrc);
+    QUEUE_Add(queue, (uint8_t)(calccrc >> 8));
+    QUEUE_Add(queue, (uint8_t)(calccrc >> 16));
+    QUEUE_Add(queue, (uint8_t)(calccrc >> 24));
+
+    strt = queue->in;
+    QUEUE_AddArray(queue, partData, partlength);
+    *crc = crc32_accumulate(0, queue, strt, partlength);
+
+    return ESP_OK;
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+  * @brief	Encode another segment of a packet
+  * @param	queue: Queue into which the data is written
+  * @param	partData: pointer to the part of the data
+  * @param	partlength: length of the data part
+  * @param	[out]crc: pointer to the returned CRC value
+  * @retval	ESP_Result
+  */
+ESP_Result ESPPKT_EncodePart(QUEUE_Typedef *queue, uint8_t *partData, uint16_t partlength, uint16_t *crc)
+{
+	uint32_t strt = queue->in;
+    QUEUE_AddArray(queue, partData, partlength);
+
+    *crc = crc32_accumulate(*crc, queue, strt, partlength);
+    return ESP_OK;
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+  * @brief	Parse for packet
+  * @param	queue: Queue into which the data is written
+  * @param	data: pointer to the part of the data
+  * @param	length: length of the data part
+  * @param	[out]crc: pointer to the returned CRC value
+  * @retval	ESP_Result
+  */
+ESP_Result ESPPKT_EncodeEnd(QUEUE_Typedef *queue, uint8_t *data, uint16_t length, uint16_t *crc)
+{
+	uint32_t strt = queue->in;
+    QUEUE_AddArray(queue, data, length);
+
+    uint32_t calccrc = crc32_accumulate(*crc, queue, strt, length);
+    QUEUE_Add(queue, (uint8_t)calccrc);
+    QUEUE_Add(queue, (uint8_t)(calccrc >> 8));
+    QUEUE_Add(queue, (uint8_t)(calccrc >> 16));
+    QUEUE_Add(queue, (uint8_t)(calccrc >> 24));
+
+    QUEUE_Add(queue, 0x03);
+    return ESP_OK;
 }
