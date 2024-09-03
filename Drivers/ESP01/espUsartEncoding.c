@@ -39,7 +39,7 @@ o ETX                           0x03
   * @param	len: number of bytes to encode
   * @retval	None
   */
-static uint32_t crc32_accumulate(uint32_t crc, QUEUE_Typedef *queue, uint32_t offset, uint32_t len)
+static uint32_t crc32_accumulate(uint32_t crc, ESPQ_Typedef *queue, uint32_t offset, uint32_t len)
 {
     int k;
 
@@ -59,7 +59,7 @@ static uint32_t crc32_accumulate(uint32_t crc, QUEUE_Typedef *queue, uint32_t of
   * @param[out]	packet: pointer to the returned packet when valid
   * @retval	ESPPKT_DECODEEnum
   */
-ESPPKT_DECODEEnum ESPPKT_Decode(QUEUE_Typedef *queue, ESPPKT_RxPacket_TD *packet)
+ESPPKT_DECODEEnum ESPPKT_Decode(ESPQ_Typedef *queue, ESPPKT_RxPacket_TD *packet)
 {
     if(QUEUE_COUNT(queue) < ESPPKT_OVERHEAD)
         return ESPPKT_NOTENOUGHDATA;
@@ -103,7 +103,7 @@ ESPPKT_DECODEEnum ESPPKT_Decode(QUEUE_Typedef *queue, ESPPKT_RxPacket_TD *packet
   * @param[out]	packet: pointer to the returned packet when valid
   * @retval	ESPESPPKT_STATUS_ENUM
   */
-ESP_Result ESPPKT_Encode(uint8_t *data, uint16_t length, QUEUE_Typedef *queue)
+ESP_Result ESPPKT_Encode(uint8_t *data, uint16_t length, ESPQ_Typedef *queue)
 {
     if(QUEUE_SPACE(queue) < ESPESPPKT_PACKETSIZE(length))
         return ESP_NOSPACE;
@@ -145,7 +145,7 @@ ESP_Result ESPPKT_Encode(uint8_t *data, uint16_t length, QUEUE_Typedef *queue)
   * @param	[out]crc: pointer to the returned CRC value
   * @retval	ESP_Result
   */
-ESP_Result ESPPKT_EncodeStart(QUEUE_Typedef *queue, uint16_t totallength, uint8_t *partData, uint16_t partlength, uint32_t *crc)
+ESP_Result ESPPKT_EncodeStart(ESPQ_Typedef *queue, uint16_t totallength, uint8_t *partData, uint16_t partlength, uint32_t *crc)
 {
     if(QUEUE_SPACE(queue) < ESPESPPKT_PACKETSIZE(totallength))
         return ESP_NOSPACE;
@@ -180,7 +180,7 @@ ESP_Result ESPPKT_EncodeStart(QUEUE_Typedef *queue, uint16_t totallength, uint8_
   * @param	[out]crc: pointer to the returned CRC value
   * @retval	ESP_Result
   */
-ESP_Result ESPPKT_EncodePart(QUEUE_Typedef *queue, uint8_t *partData, uint16_t partlength, uint16_t *crc)
+ESP_Result ESPPKT_EncodePart(ESPQ_Typedef *queue, uint8_t *partData, uint16_t partlength, uint16_t *crc)
 {
 	uint32_t strt = queue->in;
     QUEUE_AddArray(queue, partData, partlength);
@@ -198,7 +198,7 @@ ESP_Result ESPPKT_EncodePart(QUEUE_Typedef *queue, uint8_t *partData, uint16_t p
   * @param	[out]crc: pointer to the returned CRC value
   * @retval	ESP_Result
   */
-ESP_Result ESPPKT_EncodeEnd(QUEUE_Typedef *queue, uint8_t *data, uint16_t length, uint16_t *crc)
+ESP_Result ESPPKT_EncodeEnd(ESPQ_Typedef *queue, uint8_t *data, uint16_t length, uint16_t *crc)
 {
 	uint32_t strt = queue->in;
     QUEUE_AddArray(queue, data, length);

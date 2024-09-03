@@ -11,6 +11,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "espCore.h"
 #include "espDefs.h"
+#include "stdint.h"
+#include "esp.h"
+#include "espQueue.h"
 
 /* Exported defines ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/

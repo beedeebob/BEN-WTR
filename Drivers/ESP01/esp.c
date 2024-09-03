@@ -11,6 +11,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "esp.h"
 #include "espPktIds.h"
+#include "string.h"
+#include "stddef.h"
+#include "espUsartEncoding.h"
 
 /* Private define ------------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
@@ -124,5 +127,5 @@ ESP_Result ESP_Command(ESP_td *esp, uint16_t command, uint8_t *parameters, uint1
 	if(ESPCOMMS_GetTransmitSpace(esp) < ESPPKT_PACKETSIZE(2 + parameterSize))
 		return ESP_NOSPACE;
 
-	return ESPCOMMS_SendCommand(ESP_td *esp, uint16_t command, uint8_t *parameters, uint16_t parameterSize);
+	return ESPCOMMS_Command(esp, command, parameters, parameterSize);
 }

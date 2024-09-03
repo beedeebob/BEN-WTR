@@ -9,14 +9,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "espCommunications.h"
-#include "espQueue.h"
 #include "espUsartEncoding.h"
 
 /* Private define ------------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-void ESP_PacketReceivedHandler(ESP_td *esp, ESPPKT_RxPacket_TD *packet);
+void ESP_PacketReceivedHandler(ESP_td *esp, uint8_t *data, uint32_t length);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -110,7 +109,6 @@ ESP_Result ESPCOMMS_Command(ESP_td *esp, uint16_t command, uint8_t *parameters, 
 {
 	uint8_t data[2];
 	data[0] = (uint8_t)command;
-	data[1] = (uint8_t)(command >> 8);
 	uint16_t crc = 0;
 	ESP_Result result = ESPPKT_EncodeStart(&esp->comms.toEspBuffer, 2 + parameterSize, data, 2, &crc);
 	if(result != ESP_OK)
@@ -141,7 +139,7 @@ __attribute__((weak)) ESP_Result USART_Transmit(ESP_td *esp, uint8_t *data, uint
   * @param	packet: pointer to the received packet
   * @retval	None
   */
-__attribute__((weak)) void ESP_PacketReceivedHandler(ESP_td *esp, ESPPKT_RxPacket_TD *packet)
+__attribute__((weak)) void ESP_PacketReceivedHandler(ESP_td *esp, uint8_t *data, uint32_t length)
 {
 	return;
 }

@@ -11,6 +11,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "esp.h"
+#include "espDriver.h"
+#include "espPost.h"
 
 /* Private define ------------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
@@ -40,7 +42,7 @@ ESP_Result USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size)
   */
 void USART_ReceiveHandler(uint8_t *data, uint32_t size)
 {
-	ESP_PacketDataReceive(&esp, data, size);
+	ESPCOMMS_PacketDataReceive(&esp, data, size);
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -50,7 +52,7 @@ void USART_ReceiveHandler(uint8_t *data, uint32_t size)
   * @param	packet: pointer to the received packet
   * @retval	None
   */
-void ESP_PacketReceivedHandler(ESP_td *esp, ESPPKT_RxPacket_TD *packet)
+void ESP_PacketReceivedHandler(ESP_td *esp, uint8_t *data, uint32_t length)
 {
-	//TODO: Handle packet received
+	WTRPST_ESPCommandHandler(data, length);
 }
