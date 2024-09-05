@@ -12,6 +12,10 @@
 #define ESP01_ESPCORE_H_
 
 /* Includes ------------------------------------------------------------------*/
+#include "espQueue.h"
+#include "stdint.h"
+#include "espDefs.h"
+
 /* Exported defines ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 typedef enum
@@ -22,6 +26,20 @@ typedef enum
 	ESP_NOSPACE = 3,
 	ESP_LIMITSEXCEEDED = 3
 }ESP_Result;
+
+typedef struct
+{
+	uint8_t toEspBuffer[ESPCOMMS_BUFFERSIZE];
+	ESPQ_Typedef toEspQ;
+	uint8_t fromEspBuffer[ESPCOMMS_BUFFERSIZE];
+	ESPQ_Typedef fromEspQ;
+}ESP_Communications_td;
+
+typedef struct ESP_td
+{
+	struct ESP_td *next;				//Pointer for chaining
+	ESP_Communications_td comms;		//Communications control
+}ESP_td;
 
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */

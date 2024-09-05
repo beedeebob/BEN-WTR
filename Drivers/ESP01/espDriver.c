@@ -13,6 +13,7 @@
 #include "esp.h"
 #include "espDriver.h"
 #include "espPost.h"
+#include "espCommunications.h"
 
 /* Private define ------------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
@@ -31,6 +32,7 @@ extern ESP_td esp;
 ESP_Result USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size)
 {
 	//TODO: Configure USART DMA
+	return ESP_OK;
 }
 
 /*----------------------------------------------------------------------------*/

@@ -16,6 +16,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 void ESP_PacketReceivedHandler(ESP_td *esp, uint8_t *data, uint32_t length);
+ESP_Result USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -26,17 +27,15 @@ void ESP_PacketReceivedHandler(ESP_td *esp, uint8_t *data, uint32_t length);
   */
 void ESPCOMMS_structInit(ESP_Communications_td *commsStruct)
 {
-	commsStruct->toEspBuffer;
-	commsStruct->toEspQ.pBuff = &commsStruct->toEspBuffer;
+	commsStruct->toEspQ.pBuff = commsStruct->toEspBuffer;
 	commsStruct->toEspQ.size =  ESPCOMMS_BUFFERSIZE;
 	commsStruct->toEspQ.in =  0;
 	commsStruct->toEspQ.out =  0;
 
-	commsStruct->fromEspBuffer;
-	commsStruct->fromExpQ.pBuff = &commsStruct->fromEspBuffer;
-	commsStruct->fromExpQ.size = ESPCOMMS_BUFFERSIZE;
-	commsStruct->fromExpQ.in = 0;
-	commsStruct->fromExpQ.out = 0;
+	commsStruct->fromEspQ.pBuff = commsStruct->fromEspBuffer;
+	commsStruct->fromEspQ.size = ESPCOMMS_BUFFERSIZE;
+	commsStruct->fromEspQ.in = 0;
+	commsStruct->fromEspQ.out = 0;
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -51,24 +50,29 @@ void ESPCOMMS_tick(ESP_td *esp)
 
 	//Parse received data for packets
 	ESPPKT_RxPacket_TD receivedPacket = {0};
-	while(ESPQ_COUNT(&commsStruct->fromEspBuffer) > 0)
+	while(ESPQ_COUNT(&commsStruct->fromEspQ) > 0)
 	{
-		ESPPKT_DECODEEnum result = ESPPKT_Decode(&commsStruct->fromEspBuffer, &receivedPacket);
-		if(result == BPKT_OK)
+		ESPPKT_DECODEEnum result = ESPPKT_Decode(&commsStruct->fromEspQ, &receivedPacket);
+		if(result == ESPPKT_OK)
 		{
-			ESP_PacketReceivedHandler(commsStruct, &receivedPacket);
-			ESPQ_Remove(&commsStruct->fromEspBuffer, ESPPKT_PACKETSIZE(receivedPacket.length));
+			ESP_PacketReceivedHandler(esp, receivedPacket.data, receivedPacket.length);
+			ESPQ_Remove(&commsStruct->fromEspQ, ESPPKT_PACKETSIZE(receivedPacket.length));
 		}
-		else if(result == BPKT_NOTENOUGHDATA)
+		else if(result == ESPPKT_NOTENOUGHDATA)
 			break;
 		else
-			ESPQ_Remove(&commsStruct->fromEspBuffer, 1);
+			ESPQ_Remove(&commsStruct->fromEspQ, 1);
 	}
 
 	//Transfer out to USART
-	if(ESPQ_COUNT(&commsStruct->toEspBuffer) > 0)
+	while(ESPQ_COUNT(&commsStruct->toEspQ) > 0)
 	{
-		USART_Transmit(esp, &commsStruct->toEspBuffer);
+		uint32_t toSend = commsStruct->toEspQ.size - commsStruct->toEspQ.out;
+		if(toSend > ESPQ_COUNT(&commsStruct->toEspQ))
+			toSend = ESPQ_COUNT(&commsStruct->toEspQ);
+
+		if(USART_Transmit(esp, &commsStruct->toEspQ.pBuff[commsStruct->toEspQ.out], toSend) == ESP_OK)
+			ESPQ_Remove(&commsStruct->toEspQ, toSend);
 	}
 }
 
@@ -82,7 +86,7 @@ void ESPCOMMS_tick(ESP_td *esp)
   */
 void ESPCOMMS_PacketDataReceive(ESP_td *esp, uint8_t *pData, uint32_t length)
 {
-	ESPQ_AddArray(&esp->comms.fromEspBuffer, pData, length);
+	ESPQ_AddArray(&esp->comms.fromEspQ, pData, length);
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -93,7 +97,7 @@ void ESPCOMMS_PacketDataReceive(ESP_td *esp, uint8_t *pData, uint32_t length)
   */
 uint32_t ESPCOMMS_GetTransmitSpace(ESP_td *esp)
 {
-	return ESPQ_SPACE(&esp->comms.toEspBuffer);
+	return ESPQ_SPACE(&esp->comms.toEspQ);
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -109,11 +113,11 @@ ESP_Result ESPCOMMS_Command(ESP_td *esp, uint16_t command, uint8_t *parameters, 
 {
 	uint8_t data[2];
 	data[0] = (uint8_t)command;
-	uint16_t crc = 0;
-	ESP_Result result = ESPPKT_EncodeStart(&esp->comms.toEspBuffer, 2 + parameterSize, data, 2, &crc);
+	uint32_t crc = 0;
+	ESP_Result result = ESPPKT_EncodeStart(&esp->comms.toEspQ, 2 + parameterSize, data, 2, &crc);
 	if(result != ESP_OK)
 		return result;
-	result = ESPPKT_EncodeEnd(&esp->comms.toEspBuffer, parameters, parameterSize, &crc);
+	result = ESPPKT_EncodeEnd(&esp->comms.toEspQ, parameters, parameterSize, &crc);
 	if(result != ESP_OK)
 		return result;
 	return ESP_OK;

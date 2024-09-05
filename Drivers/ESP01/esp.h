@@ -14,18 +14,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "espCore.h"
 #include "stdint.h"
-#include "stdbool.h"
-#include "espCommunications.h"
 
 /* Exported defines ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-
-typedef struct ESP_td
-{
-	struct ESP_td *next;				//Pointer for chaining
-	ESP_Communications_td comms;		//Communications control
-}ESP_td;
-
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void ESP_Initialize(ESP_td *esp);

@@ -10,21 +10,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "espCore.h"
-#include "espDefs.h"
 #include "stdint.h"
-#include "esp.h"
-#include "espQueue.h"
 
 /* Exported defines ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-typedef struct
-{
-	uint8_t toEspBuffer[ESPCOMMS_BUFFERSIZE];
-	ESPQ_Typedef toEspQ;
-	uint8_t fromEspBuffer[ESPCOMMS_BUFFERSIZE];
-	ESPQ_Typedef fromExpQ;
-}ESP_Communications_td;
-
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void ESPCOMMS_structInit(ESP_Communications_td *commsStruct);

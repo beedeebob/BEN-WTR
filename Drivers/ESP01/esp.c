@@ -14,6 +14,7 @@
 #include "string.h"
 #include "stddef.h"
 #include "espUsartEncoding.h"
+#include "espCommunications.h"
 
 /* Private define ------------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
