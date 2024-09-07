@@ -19,8 +19,7 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void ESP_tick(void);
-void ESP_ESPCOMMSHandler(uint8_t *data, uint32_t length);
+void WTRPST_tick(void);
 bool WTRPST_PostWeatherUpdate(uint32_t pressure, int32_t temperature, uint32_t humidity);
 void WTRPST_ESPCommandHandler(uint8_t *data, uint32_t length);
 bool WTRPST_GetHasPosted(void);

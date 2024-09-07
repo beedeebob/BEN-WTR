@@ -16,7 +16,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 void ESP_PacketReceivedHandler(ESP_td *esp, uint8_t *data, uint32_t length);
-ESP_Result USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size);
+uint32_t USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -65,28 +65,40 @@ void ESPCOMMS_tick(ESP_td *esp)
 	}
 
 	//Transfer out to USART
-	while(ESPQ_COUNT(&commsStruct->toEspQ) > 0)
+	if(ESPQ_COUNT(&commsStruct->toEspQ) > 0)
 	{
 		uint32_t toSend = commsStruct->toEspQ.size - commsStruct->toEspQ.out;
 		if(toSend > ESPQ_COUNT(&commsStruct->toEspQ))
 			toSend = ESPQ_COUNT(&commsStruct->toEspQ);
 
-		if(USART_Transmit(esp, &commsStruct->toEspQ.pBuff[commsStruct->toEspQ.out], toSend) == ESP_OK)
-			ESPQ_Remove(&commsStruct->toEspQ, toSend);
+		uint32_t sent = USART_Transmit(esp, &commsStruct->toEspQ.pBuff[commsStruct->toEspQ.out], toSend);
+		ESPQ_Remove(&commsStruct->toEspQ, sent);
 	}
 }
 
 /* ---------------------------------------------------------------------------*/
 /**
-  * @brief	USART received callback handler
+  * @brief	USART received data handler
   * @param	esp: pointer to the esp system
-  * @param	data: pointer to the data to transit
-  * @param	length: amount of data to transmit
+  * @param	data: pointer to the data received
+  * @param	length: amount of data received
   * @retval	None
   */
 void ESPCOMMS_PacketDataReceive(ESP_td *esp, uint8_t *pData, uint32_t length)
 {
 	ESPQ_AddArray(&esp->comms.fromEspQ, pData, length);
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+  * @brief	USART received byte handler
+  * @param	esp: pointer to the esp system
+  * @param	data: received byte
+  * @retval	None
+  */
+void ESPCOMMS_PacketByteReceive(ESP_td *esp, uint8_t data)
+{
+	ESPQ_Add(&esp->comms.fromEspQ, data);
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -114,7 +126,7 @@ ESP_Result ESPCOMMS_Command(ESP_td *esp, uint16_t command, uint8_t *parameters, 
 	uint8_t data[2];
 	data[0] = (uint8_t)command;
 	uint32_t crc = 0;
-	ESP_Result result = ESPPKT_EncodeStart(&esp->comms.toEspQ, 2 + parameterSize, data, 2, &crc);
+	ESP_Result result = ESPPKT_EncodeStart(&esp->comms.toEspQ, 1 + parameterSize, data, 1, &crc);
 	if(result != ESP_OK)
 		return result;
 	result = ESPPKT_EncodeEnd(&esp->comms.toEspQ, parameters, parameterSize, &crc);
@@ -131,7 +143,7 @@ ESP_Result ESPCOMMS_Command(ESP_td *esp, uint16_t command, uint8_t *parameters, 
   * @param	size: amount of data to transmit
   * @retval	ESP_Result
   */
-__attribute__((weak)) ESP_Result USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size)
+__attribute__((weak)) uint32_t USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size)
 {
 	return ESP_OK;
 }

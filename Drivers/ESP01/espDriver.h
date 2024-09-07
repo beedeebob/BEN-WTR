@@ -18,6 +18,8 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void USART_ReceiveHandler(uint8_t *data, uint32_t size);
+void ESPDRV_Init(void);
+void ESPDRV_milli(void);
+void ESPDRV_DMATransferCompleteHandler(DMA_TypeDef * dma);
 
 #endif /* ESP01_ESPDRIVER_H_ */
