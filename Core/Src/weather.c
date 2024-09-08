@@ -72,7 +72,7 @@ static void WTR_ManageSensorReadings(void)
 
 		if(BME_forcedReadOfSensors(&bmeAccess) == BME_ERROK)
 		{
-			sensorTmr = 5000;
+			sensorTmr = 60000;
 			sensorState = 2;
 		}
 	case 2:
