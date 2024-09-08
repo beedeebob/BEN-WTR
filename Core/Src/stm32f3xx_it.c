@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bme280.h"
+#include "espDriver.h"
 
 /* USER CODE END Includes */
 
@@ -247,6 +248,20 @@ void DMA1_Channel4_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles DMA1 channel7 global interrupt.
+  */
+void DMA1_Channel7_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel7_IRQn 0 */
+	ESPDRV_DMATransferCompleteHandler(DMA1);
+  /* USER CODE END DMA1_Channel7_IRQn 0 */
+
+  /* USER CODE BEGIN DMA1_Channel7_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel7_IRQn 1 */
+}
+
+/**
   * @brief This function handles USB low priority or CAN_RX0 interrupts.
   */
 void USB_LP_CAN_RX0_IRQHandler(void)
@@ -258,19 +273,6 @@ void USB_LP_CAN_RX0_IRQHandler(void)
   /* USER CODE BEGIN USB_LP_CAN_RX0_IRQn 1 */
 
   /* USER CODE END USB_LP_CAN_RX0_IRQn 1 */
-}
-
-/**
-  * @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.
-  */
-void USART1_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART1_IRQn 0 */
-
-  /* USER CODE END USART1_IRQn 0 */
-  /* USER CODE BEGIN USART1_IRQn 1 */
-
-  /* USER CODE END USART1_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

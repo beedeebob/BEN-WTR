@@ -12,6 +12,7 @@
 #include "weather.h"
 #include "bme280.h"
 #include "led.h"
+#include "espPost.h"
 
 /* Private define ------------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
@@ -71,7 +72,7 @@ static void WTR_ManageSensorReadings(void)
 
 		if(BME_forcedReadOfSensors(&bmeAccess) == BME_ERROK)
 		{
-			sensorTmr = 5000;
+			sensorTmr = 60000;
 			sensorState = 2;
 		}
 	case 2:
@@ -82,8 +83,18 @@ static void WTR_ManageSensorReadings(void)
 		temperature = bmeAccess.temperature;
 		humidity = bmeAccess.humidity;
 
+		if(!WTRPST_PostWeatherUpdate(pressure, temperature, humidity))
+			sensorState = 1;
+		else
+			sensorState = 3;
+		break;
+	case 3:
+		if(!WTRPST_GetHasPosted())
+			break;
+
 		sensorState = 1;
 		break;
+
 	}
 }
 

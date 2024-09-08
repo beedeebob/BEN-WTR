@@ -73,6 +73,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define TIM1_LED_Pin GPIO_PIN_13
 #define TIM1_LED_GPIO_Port GPIOC
+#define USART2_TX_ESP_Pin GPIO_PIN_2
+#define USART2_TX_ESP_GPIO_Port GPIOA
+#define USART2_RX_ESP_Pin GPIO_PIN_3
+#define USART2_RX_ESP_GPIO_Port GPIOA
 #define GPIO_BME280_NCS_Pin GPIO_PIN_12
 #define GPIO_BME280_NCS_GPIO_Port GPIOB
 #define SPI2_SCK_BME280_Pin GPIO_PIN_13
@@ -91,10 +95,6 @@ void Error_Handler(void);
 #define SPI1_MISO_FLASH_GPIO_Port GPIOB
 #define SPI1_MOSI_FLASH_Pin GPIO_PIN_5
 #define SPI1_MOSI_FLASH_GPIO_Port GPIOB
-#define USART1_TX_ESP_Pin GPIO_PIN_6
-#define USART1_TX_ESP_GPIO_Port GPIOB
-#define USART1_RX_ESP_Pin GPIO_PIN_7
-#define USART1_RX_ESP_GPIO_Port GPIOB
 #define GPIO_ESP_NPD_EN_Pin GPIO_PIN_8
 #define GPIO_ESP_NPD_EN_GPIO_Port GPIOB
 #define GPIO_ESP_FLASH_Pin GPIO_PIN_9
