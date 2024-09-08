@@ -228,8 +228,12 @@ void WTRPST_tick(void)
   * @param	None
   * @retval	None
   */
+uint8_t commands[8];
+uint8_t commandsCount;
 void WTRPST_ESPCommandHandler(uint8_t *data, uint32_t length)
 {
+	commands[commandsCount] = data[0];
+	commandsCount = (commandsCount + 1) & (sizeof(commands) - 1);
 	switch(data[0])
 	{
 	case espPkt_ACK:

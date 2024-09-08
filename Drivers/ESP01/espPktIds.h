@@ -88,7 +88,7 @@ BYTE    BIT       VALUE                     DESCRIPTION
 0       -         espPkt_StartWeb           Packet
 */
 
-#define espPkt_Status						0x0010
+#define espPkt_Status						0x000A
 /*
 Startup the Website
 BYTE    BIT       VALUE                     DESCRIPTION
