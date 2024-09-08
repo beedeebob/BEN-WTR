@@ -18,6 +18,10 @@
 #include "bQueue.h"
 #include "string.h"
 
+#include "espUsartEncoding.h"
+#include "espQueue.h"
+#include "assert.h"
+
 /* Private define ------------------------------------------------------------*/
 #define ESPDRV_QUEUESIZE							256
 
@@ -59,10 +63,10 @@ void ESPDRV_Init(void)
 	//USART RX DMA initialize
 	LL_DMA_SetMemoryAddress(espDriver.dma, espDriver.rxDMAChan, (uint32_t)espDriver.rxQBuff);
 	LL_DMA_SetPeriphAddress(espDriver.dma, espDriver.rxDMAChan, (uint32_t)&espDriver.usart->RDR);
-	LL_DMA_SetDataLength(espDriver.dma, espDriver.rxDMAChan, sizeof(espDriver.rxDMAChan));
+	LL_DMA_SetDataLength(espDriver.dma, espDriver.rxDMAChan, sizeof(espDriver.rxQBuff));
 	LL_USART_EnableDMAReq_RX(espDriver.usart);
 	LL_DMA_EnableChannel(espDriver.dma, espDriver.rxDMAChan);
-	espDriver.lastRxDMAIndex = (sizeof(espDriver.rxDMAChan) - LL_DMA_GetDataLength(espDriver.dma, espDriver.rxDMAChan));
+	espDriver.lastRxDMAIndex = (sizeof(espDriver.rxQBuff) - LL_DMA_GetDataLength(espDriver.dma, espDriver.rxDMAChan));
 
 	//USART TX DMA initialize
 	LL_DMA_SetMemoryAddress(espDriver.dma, espDriver.txDMAChan, (uint32_t)espDriver.txQBuff);
@@ -82,8 +86,8 @@ void ESPDRV_Init(void)
 void ESPDRV_milli(void)
 {
 	//Handle the USART RX DMA
-	uint32_t newDMAIndex = (sizeof(espDriver.rxDMAChan) - LL_DMA_GetDataLength(espDriver.dma, espDriver.rxDMAChan));
-	uint32_t count = ((newDMAIndex - espDriver.lastRxDMAIndex) & (sizeof(espDriver.rxDMAChan) - 1));
+	uint32_t newDMAIndex = (sizeof(espDriver.rxQBuff) - LL_DMA_GetDataLength(espDriver.dma, espDriver.rxDMAChan));
+	uint32_t count = ((newDMAIndex - espDriver.lastRxDMAIndex) & (sizeof(espDriver.rxQBuff) - 1));
 
 	while(count > 0)
 	{
@@ -114,6 +118,9 @@ uint32_t USART_Transmit(ESP_td *esp, uint8_t *data, uint32_t size)
 	uint32_t sizeToSend = (size > sizeof(espDriver.txQBuff)) ? sizeof(espDriver.txQBuff) : size;
 	if(sizeToSend == 0)
 		return 0;
+
+	//Prepare the data
+	memcpy(espDriver.txQBuff, data, sizeToSend);
 
 	//Cnfigure the DMA
 	LL_DMA_SetDataLength(espDriver.dma, espDriver.txDMAChan, sizeToSend);
